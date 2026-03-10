@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIS Mobile Workflow</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>LIS Mobile</h1>
+      <p class="sub">Offline-first diagnostic workflow</p>
+    </div>
+    <div class="status-wrap">
+      <span id="syncStatus" class="chip">Offline mode</span>
+      <span id="sessionInfo" class="chip hidden"></span>
+    </div>
+  </header>
+
+  <main class="app-grid">
+    <section id="loginCard" class="card">
+      <h2>Login</h2>
+      <div class="grid2">
+        <label>Role
+          <select id="loginRole">
+            <option>Admin</option>
+            <option>Technician</option>
+            <option>Doctor</option>
+          </select>
+        </label>
+        <label>User
+          <input id="loginUser" placeholder="username" value="admin" />
+        </label>
+        <label>Password
+          <input id="loginPassword" type="password" placeholder="password" value="1234" />
+        </label>
+        <label>OTP (optional)
+          <input id="loginOtp" placeholder="123456" />
+        </label>
+      </div>
+      <button id="loginBtn">Sign in</button>
+      <p class="hint">Role based access: Admin (all), Technician (workflow), Doctor (view only).</p>
+    </section>
+
+    <section id="workspace" class="hidden">
+      <nav class="tabs" id="tabs"></nav>
+
+      <section id="dashboard" class="card view">
+        <h2>Smart Dashboard</h2>
+        <div id="dashboardCards" class="cards"></div>
+        <h3>Recent Patients</h3>
+        <ul id="recentPatients" class="list"></ul>
+      </section>
+
+      <section id="registration" class="card view hidden">
+        <h2>Patient Registration</h2>
+        <form id="patientForm" class="grid2">
+          <label>Patient ID <input id="patientId" readonly /></label>
+          <label>Name <input id="patientName" required /></label>
+          <label>Age <input id="patientAge" type="number" required /></label>
+          <label>Sex
+            <select id="patientSex"><option>Male</option><option>Female</option><option>Other</option></select>
+          </label>
+          <label>Phone <input id="patientPhone" /></label>
+          <label>Address <input id="patientAddress" /></label>
+          <label>Referring Doctor
+            <select id="patientDoctor"></select>
+          </label>
+          <label>Date <input id="patientDate" type="date" /></label>
+        </form>
+        <button id="savePatientBtn">Save Patient</button>
+      </section>
+
+      <section id="resultEntry" class="card view hidden">
+        <h2>Result Entry</h2>
+        <div class="toolbar">
+          <label>Patient <select id="resultPatient"></select></label>
+          <label>Panel <select id="panelSelect"></select></label>
+          <button id="loadPanelBtn">Load Tests</button>
+          <button id="saveReportBtn">Save Report (Ctrl+S)</button>
+          <button id="printReportBtn">Print (Ctrl+P)</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Test</th><th>Current Result</th><th>Previous Result</th><th>Units</th><th>Range</th><th>Flag</th></tr>
+          </thead>
+          <tbody id="resultTableBody"></tbody>
+        </table>
+        <div id="cbcInterpretation" class="note"></div>
+        <div id="criticalAlert" class="alert hidden"></div>
+        <label id="commentsWrap">Comments
+          <textarea id="resultComments" rows="3" placeholder="Sample hemolyzed, suggest repeat test..."></textarea>
+        </label>
+      </section>
+
+      <section id="history" class="card view hidden">
+        <h2>Patient History Timeline</h2>
+        <label>Patient <select id="historyPatient"></select></label>
+        <ul id="timeline" class="timeline"></ul>
+      </section>
+
+      <section id="trend" class="card view hidden">
+        <h2>Patient Trend Graphs</h2>
+        <div class="toolbar">
+          <label>Patient <select id="trendPatient"></select></label>
+          <label>Test
+            <select id="trendTest">
+              <option>HbA1c</option><option>Blood glucose</option><option>Cholesterol</option><option>Creatinine</option>
+            </select>
+          </label>
+          <button id="drawTrendBtn">Draw Trend</button>
+        </div>
+        <canvas id="trendCanvas" width="320" height="220"></canvas>
+      </section>
+
+      <section id="reprint" class="card view hidden">
+        <h2>Report Reprint</h2>
+        <div class="toolbar">
+          <input id="reprintSearch" placeholder="Search by patient name / ID" />
+          <button id="searchReprintBtn">Search</button>
+        </div>
+        <ul id="reprintList" class="list"></ul>
+      </section>
+
+      <section id="export" class="card view hidden">
+        <h2>Data Export (Admin)</h2>
+        <div class="toolbar">
+          <select id="exportType">
+            <option value="daily">Daily reports</option>
+            <option value="monthly">Monthly statistics</option>
+            <option value="patient">Patient test summaries</option>
+            <option value="revenue">Revenue summaries</option>
+          </select>
+          <button data-format="csv" class="exportBtn">Export CSV</button>
+          <button data-format="excel" class="exportBtn">Export Excel</button>
+          <button data-format="pdf" class="exportBtn">Export PDF</button>
+        </div>
+      </section>
+
+      <section id="settings" class="card view hidden">
+        <h2>Settings / Feature Toggles</h2>
+        <div id="togglePanel" class="toggle-list"></div>
+        <label>
+          <input type="checkbox" id="cloudSyncToggle" /> Enable Supabase sync (optional)
+        </label>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
