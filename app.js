@@ -352,13 +352,17 @@ function setup() {
   document.getElementById("loginBtn").onclick = login;
   document.getElementById("savePatientBtn").onclick = savePatient;
   document.getElementById("loadOrderPanelBtn").onclick = loadOrderPanel;
+  document.getElementById("orderSingleTest").onchange = appendSingleTestToOrder;
+  document.getElementById("orderTests").addEventListener("input", updateOrderTotal);
   document.getElementById("createOrderBtn").onclick = createOrder;
   document.getElementById("loadOrderBtn").onclick = loadOrderForEntry;
   document.getElementById("saveReportBtn").onclick = saveReport;
   document.getElementById("printReportBtn").onclick = () => window.print();
   document.getElementById("generateReportBtn").onclick = generateReportPreview;
+  document.getElementById("printGeneratedReportBtn").onclick = printGeneratedReport;
   document.getElementById("patientSearchBtn").onclick = searchPatients;
   document.getElementById("createBillBtn").onclick = createBill;
+  document.getElementById("printBillBtn").onclick = printBill;
   document.getElementById("drawTrendBtn").onclick = drawTrend;
   document.getElementById("searchReprintBtn").onclick = searchReprints;
   document.querySelectorAll(".exportBtn").forEach(b => b.onclick = exportData);
@@ -428,9 +432,11 @@ function renderTabs() {
   });
 }
 function renderAll() {
+  syncWorkflowCatalogWithMaster();
   renderDoctorList();
   renderPatientSelects();
   renderPanelSelect();
+  renderSingleTestSelect();
   renderOrderList();
   renderOrderSelect();
   renderReportSelect();
@@ -453,6 +459,22 @@ function renderPatientSelects() {
 function renderPanelSelect() {
   const options = Object.keys(db.panels).map(p => `<option>${p}</option>`).join("");
   document.getElementById("orderPanel").innerHTML = options;
+}
+function renderSingleTestSelect() {
+  const options = Object.keys(db.tests)
+    .filter((name) => db.tests[name]?.range !== "panel")
+    .map((name) => `<option>${name}</option>`)
+    .join("");
+  document.getElementById("orderSingleTest").innerHTML = `<option value="">Select test</option>${options}`;
+}
+function appendSingleTestToOrder() {
+  const selected = document.getElementById("orderSingleTest").value;
+  if (!selected) return;
+  const area = document.getElementById("orderTests");
+  const tests = area.value.split(",").map(x => x.trim()).filter(Boolean);
+  if (!tests.includes(selected)) tests.push(selected);
+  area.value = tests.join(", ");
+  updateOrderTotal();
 }
 function savePatient() {
   const p = {
@@ -480,6 +502,19 @@ function normalizedPanelTests(panel) {
 function loadOrderPanel() {
   const panel = document.getElementById("orderPanel").value;
   document.getElementById("orderTests").value = normalizedPanelTests(panel).join(", ");
+  updateOrderTotal();
+}
+function testPrice(testName) {
+  const masterTest = data.tests.find((t) => t.name === testName);
+  const fromMaster = Number(masterTest?.price);
+  if (!Number.isNaN(fromMaster) && fromMaster > 0) return fromMaster;
+  return Number(db.tests[testName]?.price) || 0;
+}
+function updateOrderTotal() {
+  const tests = document.getElementById("orderTests").value.split(",").map(x => x.trim()).filter(Boolean);
+  const total = tests.reduce((sum, name) => sum + testPrice(name), 0);
+  document.getElementById("orderTotalPrice").textContent = `Total Price: ${total.toFixed(2)}`;
+  return total;
 }
 function createOrder() {
   const patientId = document.getElementById("orderPatient").value;
@@ -493,6 +528,7 @@ function createOrder() {
     tests,
     status: "Ordered",
     date: nowDate(),
+    totalPrice: updateOrderTotal(),
   });
   saveData();
 }
@@ -613,7 +649,7 @@ function saveReport() {
     results: collectResults(),
     comments: document.getElementById("resultComments").value,
     paymentMethod: "Pending",
-    revenue: order?.tests?.length ? order.tests.length * 120 : 500,
+    revenue: order?.totalPrice || 0,
     orderId,
   };
   db.reports.unshift(report);
@@ -654,19 +690,36 @@ function generateReportPreview() {
   const report = db.reports.find(r => r.id === rid);
   if (!report) return;
   const patient = db.patients.find(p => p.id === report.patientId);
-  const lines = [
-    `Report ID: ${report.id}`,
-    `Patient: ${patient?.name || report.patientId}`,
-    `Date: ${report.date}`,
-    `Technician workflow status: Finalized`,
-    ...Object.entries(report.results).map(([k,v]) => `${k}: ${v}`),
-    `Comments: ${report.comments || "-"}`,
-  ];
-  document.getElementById("generatedReport").textContent = lines.join("\n");
+  const qrData = encodeURIComponent(`verify: ${report.id} | ${data.template.labName}`);
+  const resultRows = Object.entries(report.results).map(([k, v]) => {
+    const meta = db.tests[k] || {};
+    const abnormal = isAbnormal(v, meta.range, meta.low, meta.high);
+    return `<tr><td>${k}</td><td class="${abnormal ? "abnormal" : ""}">${v || "-"}</td><td>${meta.unit || "-"}</td><td>${meta.range || "-"}</td></tr>`;
+  }).join("");
+  document.getElementById("generatedReport").innerHTML = `
+    <h3>${data.template.labName}</h3>
+    <div>Doctor: ${data.template.doctorName} (${data.template.doctorQualification})</div>
+    <div>Report ID: ${report.id} | Date: ${report.date}</div>
+    <div>Patient: ${patient?.name || report.patientId} (${report.patientId})</div>
+    <table>
+      <thead><tr><th>Test</th><th>Result</th><th>Unit</th><th>Range</th></tr></thead>
+      <tbody>${resultRows}</tbody>
+    </table>
+    <div>Comments: ${report.comments || "-"}</div>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${qrData}" alt="Report QR" />
+  `;
+}
+function printGeneratedReport() {
+  const html = document.getElementById("generatedReport").innerHTML;
+  if (!html.trim()) return;
+  const w = window.open("", "_blank");
+  w.document.write(`<div>${html}</div>`);
+  w.print();
 }
 function searchPatients() {
   const q = document.getElementById("patientSearchInput").value.toLowerCase();
-  const rows = db.patients.filter(p => `${p.id} ${p.name} ${p.phone}`.toLowerCase().includes(q));
+  const d = document.getElementById("patientSearchDate").value;
+  const rows = db.patients.filter((p) => `${p.id} ${p.name} ${p.phone}`.toLowerCase().includes(q) && (!d || p.date === d));
   document.getElementById("patientSearchResults").innerHTML = rows.map(p => `<li>${p.id} | ${p.name} | ${p.phone || "-"}</li>`).join("") || "<li>No patient found</li>";
 }
 function renderBillingReportSelect() {
@@ -687,7 +740,15 @@ function createBill() {
   };
   db.bills.unshift(bill);
   report.paymentMethod = method;
+  document.getElementById("billPreview").textContent = `Bill ${bill.id} | Report ${bill.reportId} | Patient ${bill.patientId} | Amount ${bill.amount.toFixed(2)} | ${bill.paymentMethod} | ${bill.date}`;
   saveData();
+}
+function printBill() {
+  const billText = document.getElementById("billPreview").textContent;
+  if (!billText || billText.includes("will appear")) return alert("Generate a bill first");
+  const w = window.open("", "_blank");
+  w.document.write(`<pre>${billText}</pre>`);
+  w.print();
 }
 function renderBillingList() {
   const ul = document.getElementById("billingList");
@@ -771,6 +832,25 @@ function applyFeatureToggles() {
   document.getElementById("trend").classList.toggle("hidden", !feature.trendGraphs && document.querySelector(".tabs button.active")?.dataset.view === "trend");
   document.getElementById("export").classList.toggle("hidden", !feature.dataExport && document.querySelector(".tabs button.active")?.dataset.view === "export");
   if (currentTests.length) renderResultRows();
+}
+function syncWorkflowCatalogWithMaster() {
+  if (Array.isArray(data.tests) && data.tests.length) {
+    data.tests.forEach((test) => {
+      const parsedRange = parseRange(test.maleRange || test.femaleRange || test.pediatricRange || "");
+      db.tests[test.name] = {
+        unit: test.units || "",
+        range: test.maleRange || test.femaleRange || test.pediatricRange || "",
+        low: parsedRange?.min || Number(test.criticalLow) || 0,
+        high: parsedRange?.max || Number(test.criticalHigh) || 0,
+        price: Number(test.price) || 0,
+      };
+    });
+  }
+  if (Array.isArray(data.panels) && data.panels.length) {
+    data.panels.forEach((panel) => {
+      db.panels[panel.name] = panel.tests.split(",").map((t) => t.trim()).filter(Boolean);
+    });
+  }
 }
 ["historyPatient"].forEach(id => document.addEventListener("change", (e) => {
   if (e.target.id === id) renderTimeline();
