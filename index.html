@@ -3,6 +3,146 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIS Master Data & Report Designer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>LIS Admin Settings & Report Layout Studio</h1>
+    <p>Comprehensive master data management and professional diagnostic report template controls.</p>
+  </header>
+
+  <main class="layout">
+    <aside class="settings-panel">
+      <h2>Master Settings Panel</h2>
+
+      <section class="card" id="module-test-master">
+        <h3>1) Test Master Management</h3>
+        <form id="testForm" class="grid-form">
+          <input name="name" placeholder="Test Name" required />
+          <input name="department" placeholder="Department" required />
+          <input name="units" placeholder="Units (mg/dL, g/dL...)" />
+          <input name="maleRange" placeholder="Male Range (e.g., 13-17)" />
+          <input name="femaleRange" placeholder="Female Range" />
+          <input name="pediatricRange" placeholder="Pediatric Range" />
+          <input name="criticalLow" type="number" step="any" placeholder="Critical Low" />
+          <input name="criticalHigh" type="number" step="any" placeholder="Critical High" />
+          <input name="price" type="number" step="0.01" placeholder="Test Price" />
+          <button type="submit">Add / Update Test</button>
+        </form>
+        <div id="testMasterTable"></div>
+      </section>
+
+      <section class="card">
+        <h3>2) Formula Management</h3>
+        <form id="formulaForm" class="grid-form">
+          <input name="name" placeholder="Formula Name (e.g., MCV)" required />
+          <input name="expression" placeholder="Expression (HCT * 10 / RBC)" required />
+          <input name="linkedTest" placeholder="Linked Test" />
+          <button type="submit">Add / Update Formula</button>
+        </form>
+        <div id="formulaTable"></div>
+      </section>
+
+      <section class="card">
+        <h3>3) Test Panel Management</h3>
+        <form id="panelForm" class="grid-form">
+          <input name="name" placeholder="Panel Name (e.g., Fever Panel)" required />
+          <input name="tests" placeholder="Comma separated tests" required />
+          <button type="submit">Add / Update Panel</button>
+        </form>
+        <div id="panelTable"></div>
+      </section>
+
+      <section class="card">
+        <h3>4) Doctor Database Management</h3>
+        <form id="doctorForm" class="grid-form">
+          <input name="name" placeholder="Doctor Name" required />
+          <input name="qualification" placeholder="Qualification" />
+          <input name="clinic" placeholder="Clinic Name" />
+          <input name="contact" placeholder="Contact Number" />
+          <button type="submit">Add / Update Doctor</button>
+        </form>
+        <div id="doctorTable"></div>
+      </section>
+
+      <section class="card">
+        <h3>5) Department Management</h3>
+        <form id="departmentForm" class="grid-form">
+          <input name="name" placeholder="Department Name" required />
+          <button type="submit">Add Department</button>
+        </form>
+        <div id="departmentTable"></div>
+      </section>
+
+      <section class="card">
+        <h3>6) Inventory Item Management</h3>
+        <form id="inventoryForm" class="grid-form">
+          <input name="name" placeholder="Item Name" required />
+          <input name="stock" type="number" placeholder="Stock Quantity" required />
+          <input name="lowAlert" type="number" placeholder="Low Stock Alert Level" required />
+          <button type="submit">Add / Update Inventory</button>
+        </form>
+        <div id="inventoryTable"></div>
+      </section>
+
+      <section class="card">
+        <h3>7) Report Template Settings</h3>
+        <form id="templateForm" class="grid-form">
+          <label><input type="checkbox" name="headerEnabled" checked /> Enable Header</label>
+          <label><input type="checkbox" name="footerEnabled" checked /> Enable Footer</label>
+          <label>Report Start Line
+            <select name="startLine">
+              <option value="4">Line 4</option>
+              <option value="5">Line 5</option>
+              <option value="6">Line 6</option>
+            </select>
+          </label>
+          <input name="labName" placeholder="Lab Name" value="Central Diagnostic Laboratory" />
+          <input name="address" placeholder="Lab Address" value="123 Health Avenue, Metro City" />
+          <input name="phone" placeholder="Phone" value="+1-555-900-1000" />
+          <input name="email" placeholder="Email" value="info@centrallab.example" />
+          <input name="registration" placeholder="Registration No." value="REG-2026-LIS-009" />
+          <input name="doctorName" placeholder="Doctor Name" value="Dr. Sophia Carter" />
+          <input name="doctorQualification" placeholder="Doctor Qualification" value="MD Pathology" />
+          <input name="technicianName" placeholder="Technician Name" value="Alex Morgan" />
+          <label>Lab / Program Logos (multiple)
+            <input name="logos" type="file" accept="image/*" multiple />
+          </label>
+          <label>Doctor Signature
+            <input name="doctorSignature" type="file" accept="image/*" />
+          </label>
+          <label>Technician Signature
+            <input name="techSignature" type="file" accept="image/*" />
+          </label>
+          <button type="submit">Save Template Settings</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h3>8) Feature Toggle Settings</h3>
+        <form id="featureForm" class="toggle-grid">
+          <label><input type="checkbox" name="analyzerIntegration" checked /> Analyzer Integration</label>
+          <label><input type="checkbox" name="abnormalHighlighting" checked /> Abnormal Result Highlighting</label>
+          <label><input type="checkbox" name="trendGraphs" checked /> Trend Graphs</label>
+          <label><input type="checkbox" name="inventoryModule" checked /> Inventory Module</label>
+          <label><input type="checkbox" name="cloudBackup" /> Cloud Backup</label>
+          <label><input type="checkbox" name="keyboardShortcuts" /> Keyboard Shortcuts</label>
+          <label><input type="checkbox" name="commentsSection" checked /> Comments Section</label>
+          <button type="submit">Save Features</button>
+        </form>
+      </section>
+    </aside>
+
+    <section class="preview-panel">
+      <div class="preview-actions">
+        <button onclick="window.print()">Print / Save PDF</button>
+      </div>
+      <article class="report" id="reportPreview">
+        <div class="report-header" id="reportHeader"></div>
+        <div class="report-content" id="reportContent"></div>
+        <div class="report-footer" id="reportFooter"></div>
+      </article>
   <title>LIS Mobile Workflow</title>
   <link rel="stylesheet" href="styles.css" />
 </head>

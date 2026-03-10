@@ -1,4 +1,145 @@
 :root {
+  --bg: #f4f7fb;
+  --card: #fff;
+  --ink: #1f2a37;
+  --accent: #0a4d8c;
+  --danger: #b91c1c;
+  --line: #d8e2ef;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+.app-header {
+  background: var(--accent);
+  color: #fff;
+  padding: 1rem 1.25rem;
+}
+.app-header h1 { margin: 0 0 .3rem; font-size: 1.25rem; }
+.app-header p { margin: 0; opacity: .9; }
+.layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 1rem;
+  padding: 1rem;
+}
+.settings-panel {
+  max-height: calc(100vh - 95px);
+  overflow: auto;
+  padding-right: .4rem;
+}
+.card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: .9rem;
+  margin-bottom: .85rem;
+  border: 1px solid var(--line);
+}
+.card h3 { margin-top: 0; font-size: .95rem; }
+.grid-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .45rem;
+}
+.grid-form label,
+.grid-form button,
+.grid-form select { grid-column: span 2; }
+input, select, button {
+  padding: .5rem;
+  border-radius: 8px;
+  border: 1px solid #b7c7da;
+  font-size: .88rem;
+}
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.toggle-grid { display: grid; gap: .35rem; }
+.toggle-grid button { margin-top: .3rem; }
+.table-wrap { overflow: auto; margin-top: .6rem; }
+table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+th, td { border: 1px solid var(--line); padding: .3rem; text-align: left; }
+th { background: #eef4fb; }
+.action {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  margin-right: .45rem;
+}
+.preview-panel { min-width: 0; }
+.preview-actions { margin-bottom: .6rem; }
+.report {
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff;
+  margin: 0 auto;
+  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+  padding: 12mm;
+  display: flex;
+  flex-direction: column;
+}
+.report-header { border-bottom: 2px solid #1d3b63; padding-bottom: 6px; }
+.header-row { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+.logo-strip { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
+.logo-strip img { height: 42px; width: auto; object-fit: contain; }
+.lab-info h2 { margin: 0; font-size: 1.05rem; color: #163c6b; }
+.lab-info p { margin: 1px 0; font-size: .76rem; }
+.meta-box { font-size: .76rem; text-align: right; }
+.report-content { flex: 1; }
+.start-line-4 { margin-top: 10mm; }
+.start-line-5 { margin-top: 14mm; }
+.start-line-6 { margin-top: 18mm; }
+.patient-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .35rem;
+  margin-bottom: 8px;
+  font-size: .78rem;
+}
+.section-title { font-size: .86rem; margin: .4rem 0; color: #163c6b; }
+.result-table th { font-size: .75rem; }
+.result-table td { font-size: .77rem; }
+.abnormal {
+  color: var(--danger);
+  font-weight: 700;
+}
+.report-footer {
+  border-top: 1px solid #9eb3cb;
+  margin-top: 8px;
+  padding-top: 6px;
+  font-size: .74rem;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: .5rem;
+  align-items: end;
+}
+.sig img { height: 34px; width: auto; display: block; }
+.disclaimer { margin-top: .3rem; color: #3f4c5d; }
+.qr { text-align: right; }
+.qr img { width: 78px; height: 78px; }
+@media (max-width: 1200px) {
+  .layout { grid-template-columns: 1fr; }
+  .settings-panel { max-height: none; }
+  .report { width: 100%; min-height: auto; }
+}
+@media print {
+  body { background: #fff; }
+  .settings-panel, .preview-actions, .app-header { display: none !important; }
+  .layout { display: block; padding: 0; }
+  .report {
+    box-shadow: none;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+  }
   --bg: #f2f6fb;
   --card: #fff;
   --primary: #1f4b99;
