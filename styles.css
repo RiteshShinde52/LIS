@@ -158,7 +158,7 @@ input, select, textarea, button { padding: 8px; border-radius: 6px; border: 1px 
 button { background: var(--primary); color: white; border: none; }
 button:hover { opacity: 0.92; }
 .hidden { display: none !important; }
-.tabs { display: grid; grid-template-columns: repeat(8, minmax(70px, 1fr)); gap: 6px; margin-bottom: 10px; }
+.tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 6px; margin-bottom: 10px; }
 .tabs button { background: #dce8ff; color: #123; padding: 8px 6px; font-size: 0.78rem; }
 .tabs button.active { background: var(--primary); color: #fff; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; margin-bottom: 8px; }
@@ -179,7 +179,9 @@ th, td { border: 1px solid #d9e0ec; padding: 6px; }
 
 @media (max-width: 720px) {
   .grid2 { grid-template-columns: 1fr; }
-  .tabs { grid-template-columns: repeat(4, minmax(60px, 1fr)); }
+  .tabs { grid-template-columns: repeat(3, minmax(60px, 1fr)); }
   .cards { grid-template-columns: 1fr 1fr; }
   table { font-size: 0.75rem; }
 }
+
+.report-block { background: #f8fbff; border: 1px solid #d9e0ec; border-radius: 8px; padding: 10px; min-height: 180px; white-space: pre-wrap; }

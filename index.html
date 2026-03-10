@@ -212,12 +212,25 @@
         <button id="savePatientBtn">Save Patient</button>
       </section>
 
-      <section id="resultEntry" class="card view hidden">
-        <h2>Result Entry</h2>
+      <section id="ordering" class="card view hidden">
+        <h2>Test Ordering</h2>
         <div class="toolbar">
-          <label>Patient <select id="resultPatient"></select></label>
-          <label>Panel <select id="panelSelect"></select></label>
-          <button id="loadPanelBtn">Load Tests</button>
+          <label>Patient <select id="orderPatient"></select></label>
+          <label>Panel <select id="orderPanel"></select></label>
+          <button id="loadOrderPanelBtn">Load Tests</button>
+        </div>
+        <label>Selected Tests
+          <textarea id="orderTests" rows="3" placeholder="Tests appear here, comma separated"></textarea>
+        </label>
+        <button id="createOrderBtn">Create Test Order</button>
+        <ul id="orderList" class="list"></ul>
+      </section>
+
+      <section id="resultEntry" class="card view hidden">
+        <h2>Technician Result Entry</h2>
+        <div class="toolbar">
+          <label>Pending Order <select id="resultOrder"></select></label>
+          <button id="loadOrderBtn">Load Order</button>
           <button id="saveReportBtn">Save Report (Ctrl+S)</button>
           <button id="printReportBtn">Print (Ctrl+P)</button>
         </div>
@@ -232,6 +245,36 @@
         <label id="commentsWrap">Comments
           <textarea id="resultComments" rows="3" placeholder="Sample hemolyzed, suggest repeat test..."></textarea>
         </label>
+      </section>
+
+      <section id="reporting" class="card view hidden">
+        <h2>Report Generation</h2>
+        <div class="toolbar">
+          <label>Report <select id="reportSelect"></select></label>
+          <button id="generateReportBtn">Generate Report</button>
+        </div>
+        <pre id="generatedReport" class="report-block">Select a report and click Generate Report.</pre>
+      </section>
+
+      <section id="search" class="card view hidden">
+        <h2>Patient Search</h2>
+        <div class="toolbar">
+          <input id="patientSearchInput" placeholder="Search by name, ID, or phone" />
+          <button id="patientSearchBtn">Search Patient</button>
+        </div>
+        <ul id="patientSearchResults" class="list"></ul>
+      </section>
+
+      <section id="billing" class="card view hidden">
+        <h2>Billing</h2>
+        <div class="toolbar">
+          <label>Report <select id="billingReport"></select></label>
+          <label>Payment
+            <select id="billingMethod"><option>Cash</option><option>UPI</option><option>Card</option></select>
+          </label>
+          <button id="createBillBtn">Generate Bill</button>
+        </div>
+        <ul id="billingList" class="list"></ul>
       </section>
 
       <section id="history" class="card view hidden">

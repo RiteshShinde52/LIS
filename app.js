@@ -1,5 +1,4 @@
-const storageKey = "lis-master-data-v1";
-
+const masterStorageKey = "lis-master-data-v1";
 const defaults = {
   tests: [
     { name: "Hemoglobin", department: "Hematology", units: "g/dL", maleRange: "13-17", femaleRange: "12-15", pediatricRange: "11-14", criticalLow: "7", criticalHigh: "20", price: "8" },
@@ -47,19 +46,15 @@ const defaults = {
     techSignature: ""
   }
 };
-
-let data = loadData();
+let data = loadMasterData();
 let editState = {};
-
-function loadData() {
-  const raw = localStorage.getItem(storageKey);
+function loadMasterData() {
+  const raw = localStorage.getItem(masterStorageKey);
   return raw ? JSON.parse(raw) : structuredClone(defaults);
 }
-
-function saveData() {
-  localStorage.setItem(storageKey, JSON.stringify(data));
+function saveMasterData() {
+  localStorage.setItem(masterStorageKey, JSON.stringify(data));
 }
-
 function toDataUrl(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -67,33 +62,29 @@ function toDataUrl(file) {
     reader.readAsDataURL(file);
   });
 }
-
 function bindCrud(formId, key, fields, tableId) {
   const form = document.getElementById(formId);
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const formData = new FormData(form);
     const record = Object.fromEntries(fields.map((f) => [f, formData.get(f) || ""]));
-
     if (editState[key] !== undefined) {
       data[key][editState[key]] = record;
       editState[key] = undefined;
     } else {
       data[key].push(record);
     }
-    saveData();
+    saveMasterData();
     form.reset();
     renderTable(key, tableId, fields);
     renderReport();
   });
   renderTable(key, tableId, fields);
 }
-
 function renderTable(key, tableId, fields) {
   const container = document.getElementById(tableId);
   container.innerHTML = "";
   if (!data[key].length) return;
-
   const tableWrap = document.createElement("div");
   tableWrap.className = "table-wrap";
   const table = document.createElement("table");
@@ -107,7 +98,6 @@ function renderTable(key, tableId, fields) {
   act.textContent = "Actions";
   head.appendChild(act);
   table.appendChild(head);
-
   data[key].forEach((row, idx) => {
     const tr = document.createElement("tr");
     fields.forEach((f) => {
@@ -128,7 +118,7 @@ function renderTable(key, tableId, fields) {
       }
       if (del !== undefined) {
         data[key].splice(Number(del), 1);
-        saveData();
+        saveMasterData();
         renderTable(key, tableId, fields);
         renderReport();
       }
@@ -136,18 +126,15 @@ function renderTable(key, tableId, fields) {
     tr.appendChild(tdA);
     table.appendChild(tr);
   });
-
   tableWrap.appendChild(table);
   container.appendChild(tableWrap);
 }
-
 function parseRange(rangeText) {
   if (!rangeText || !rangeText.includes("-")) return null;
   const [min, max] = rangeText.split("-").map(Number);
   if (Number.isNaN(min) || Number.isNaN(max)) return null;
   return { min, max };
 }
-
 function isAbnormal(result, range, criticalLow, criticalHigh) {
   const r = Number(result);
   if (Number.isNaN(r)) return false;
@@ -157,7 +144,6 @@ function isAbnormal(result, range, criticalLow, criticalHigh) {
   if (criticalHigh && r > Number(criticalHigh)) return true;
   return false;
 }
-
 async function initTemplateForm() {
   const form = document.getElementById("templateForm");
   Object.entries(data.template).forEach(([k, v]) => {
@@ -165,7 +151,6 @@ async function initTemplateForm() {
     if (form.elements[k].type === "checkbox") form.elements[k].checked = !!v;
     else if (form.elements[k].type !== "file") form.elements[k].value = v;
   });
-
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
@@ -175,7 +160,6 @@ async function initTemplateForm() {
     ["labName", "address", "phone", "email", "registration", "doctorName", "doctorQualification", "technicianName"].forEach((k) => {
       data.template[k] = fd.get(k) || "";
     });
-
     const logos = form.elements.logos.files;
     if (logos.length) {
       data.template.logos = await Promise.all([...logos].map(toDataUrl));
@@ -184,12 +168,10 @@ async function initTemplateForm() {
     if (docSig) data.template.doctorSignature = await toDataUrl(docSig);
     const techSig = form.elements.techSignature.files[0];
     if (techSig) data.template.techSignature = await toDataUrl(techSig);
-
-    saveData();
+    saveMasterData();
     renderReport();
   });
 }
-
 function initFeatureForm() {
   const form = document.getElementById("featureForm");
   Object.entries(data.features).forEach(([k, v]) => {
@@ -200,20 +182,17 @@ function initFeatureForm() {
     Object.keys(data.features).forEach((k) => {
       data.features[k] = !!form.elements[k].checked;
     });
-    saveData();
+    saveMasterData();
     renderReport();
   });
 }
-
 function renderReport() {
   const t = data.template;
   const headerEl = document.getElementById("reportHeader");
   const contentEl = document.getElementById("reportContent");
   const footerEl = document.getElementById("reportFooter");
-
   headerEl.style.display = t.headerEnabled ? "block" : "none";
   footerEl.style.display = t.footerEnabled ? "block" : "none";
-
   headerEl.innerHTML = `
     <div class="header-row">
       <div class="logo-strip">
@@ -232,7 +211,6 @@ function renderReport() {
       </div>
     </div>
   `;
-
   const results = data.tests.slice(0, 8).map((test, idx) => {
     const baseRange = test.maleRange || test.femaleRange || test.pediatricRange || "-";
     const parsed = parseRange(baseRange);
@@ -247,7 +225,6 @@ function renderReport() {
       </tr>
     `;
   }).join("");
-
   contentEl.className = `report-content start-line-${t.startLine}`;
   contentEl.innerHTML = `
     <div class="patient-grid">
@@ -271,7 +248,6 @@ function renderReport() {
       <tbody>${results}</tbody>
     </table>
   `;
-
   const qrData = encodeURIComponent(`verify: LIS-240010 | ${t.labName}`);
   footerEl.innerHTML = `
     <div class="footer-grid">
@@ -294,7 +270,6 @@ function renderReport() {
     <div>${t.address} | ${t.phone} | ${t.email}</div>
   `;
 }
-
 function initialize() {
   bindCrud("testForm", "tests", ["name", "department", "units", "maleRange", "femaleRange", "pediatricRange", "criticalLow", "criticalHigh", "price"], "testMasterTable");
   bindCrud("formulaForm", "formulas", ["name", "expression", "linkedTest"], "formulaTable");
@@ -306,12 +281,10 @@ function initialize() {
   initFeatureForm();
   renderReport();
 }
-
 initialize();
 const storageKey = "lis_mobile_data_v1";
 const settingsKey = "lis_feature_toggles_v1";
 let sessionTimer;
-
 const defaultSettings = {
   abnormalHighlight: true,
   keyboardShortcuts: true,
@@ -325,7 +298,6 @@ const defaultSettings = {
   inventorySystem: false,
   cloudBackup: false,
 };
-
 const defaultData = {
   doctors: [
     { name: "Dr. Sharma", hospital: "City Clinic", contact: "9000000011", address: "Central Road" },
@@ -355,18 +327,18 @@ const defaultData = {
   },
   patients: [],
   reports: [],
+  orders: [],
+  bills: [],
   inventory: [
     { item: "EDTA Tubes", stock: 20 },
     { item: "Syringes", stock: 150 },
     { item: "Glucose Reagent", stock: 8 },
   ],
 };
-
 let db = loadData();
 let feature = loadSettings();
 let role = "";
 let currentTests = [];
-
 function loadData() {
   const raw = localStorage.getItem(storageKey);
   return raw ? JSON.parse(raw) : structuredClone(defaultData);
@@ -376,13 +348,17 @@ function loadSettings() { return { ...defaultSettings, ...(JSON.parse(localStora
 function saveSettings() { localStorage.setItem(settingsKey, JSON.stringify(feature)); applyFeatureToggles(); }
 function makeId() { return `P${Date.now().toString().slice(-8)}`; }
 function nowDate() { return new Date().toISOString().slice(0, 10); }
-
 function setup() {
   document.getElementById("loginBtn").onclick = login;
   document.getElementById("savePatientBtn").onclick = savePatient;
-  document.getElementById("loadPanelBtn").onclick = loadPanel;
+  document.getElementById("loadOrderPanelBtn").onclick = loadOrderPanel;
+  document.getElementById("createOrderBtn").onclick = createOrder;
+  document.getElementById("loadOrderBtn").onclick = loadOrderForEntry;
   document.getElementById("saveReportBtn").onclick = saveReport;
   document.getElementById("printReportBtn").onclick = () => window.print();
+  document.getElementById("generateReportBtn").onclick = generateReportPreview;
+  document.getElementById("patientSearchBtn").onclick = searchPatients;
+  document.getElementById("createBillBtn").onclick = createBill;
   document.getElementById("drawTrendBtn").onclick = drawTrend;
   document.getElementById("searchReprintBtn").onclick = searchReprints;
   document.querySelectorAll(".exportBtn").forEach(b => b.onclick = exportData);
@@ -393,7 +369,6 @@ function setup() {
   renderAll();
   monitorOffline();
 }
-
 function monitorOffline() {
   const sync = document.getElementById("syncStatus");
   const paint = () => sync.textContent = navigator.onLine ? "Online" : "Offline mode";
@@ -401,7 +376,6 @@ function monitorOffline() {
   window.addEventListener("offline", paint);
   paint();
 }
-
 function login() {
   const user = document.getElementById("loginUser").value.trim();
   const pass = document.getElementById("loginPassword").value;
@@ -414,7 +388,6 @@ function login() {
   startSessionTimeout();
   applyRoleAccess();
 }
-
 function startSessionTimeout() {
   clearTimeout(sessionTimer);
   sessionTimer = setTimeout(() => {
@@ -426,17 +399,16 @@ function startSessionTimeout() {
     startSessionTimeout();
   }, { once: true }));
 }
-
 function applyRoleAccess() {
   if (role !== "Admin") document.getElementById("settings").classList.add("hidden");
   if (role === "Doctor") {
     ["resultEntry", "registration", "export"].forEach(v => document.querySelector(`[data-view='${v}']`)?.classList.add("hidden"));
   }
 }
-
 function renderTabs() {
   const views = [
-    ["dashboard", "Dashboard"], ["registration", "Patients"], ["resultEntry", "Results"], ["history", "History"],
+    ["dashboard", "Dashboard"], ["registration", "Registration"], ["ordering", "Ordering"], ["resultEntry", "Results"],
+    ["reporting", "Reporting"], ["search", "Search"], ["billing", "Billing"], ["history", "History"],
     ["trend", "Trends"], ["reprint", "Reprint"], ["export", "Export"], ["settings", "Settings"]
   ];
   const tabs = document.getElementById("tabs");
@@ -455,30 +427,33 @@ function renderTabs() {
     tabs.appendChild(b);
   });
 }
-
 function renderAll() {
   renderDoctorList();
   renderPatientSelects();
   renderPanelSelect();
+  renderOrderList();
+  renderOrderSelect();
+  renderReportSelect();
+  renderBillingReportSelect();
   renderDashboard();
   renderTimeline();
   renderReprintList(db.reports);
+  renderBillingList();
   renderToggles();
   applyFeatureToggles();
 }
-
 function renderDoctorList() {
   const sel = document.getElementById("patientDoctor");
   sel.innerHTML = db.doctors.map(d => `<option>${d.name} - ${d.hospital}</option>`).join("");
 }
 function renderPatientSelects() {
   const options = db.patients.map(p => `<option value="${p.id}">${p.id} - ${p.name}</option>`).join("");
-  ["resultPatient", "historyPatient", "trendPatient"].forEach(id => document.getElementById(id).innerHTML = options);
+  ["orderPatient", "historyPatient", "trendPatient"].forEach(id => document.getElementById(id).innerHTML = options);
 }
 function renderPanelSelect() {
-  document.getElementById("panelSelect").innerHTML = Object.keys(db.panels).map(p => `<option>${p}</option>`).join("");
+  const options = Object.keys(db.panels).map(p => `<option>${p}</option>`).join("");
+  document.getElementById("orderPanel").innerHTML = options;
 }
-
 function savePatient() {
   const p = {
     id: document.getElementById("patientId").value,
@@ -497,21 +472,54 @@ function savePatient() {
   document.getElementById("patientId").value = makeId();
   saveData();
 }
-
-function loadPanel() {
-  const panel = document.getElementById("panelSelect").value;
-  currentTests = [...db.panels[panel]];
-  if (currentTests.includes("CBC")) currentTests.push("Hemoglobin", "RBC", "HCT", "Potassium", "Blood glucose");
-  renderResultRows();
+function normalizedPanelTests(panel) {
+  const tests = [...(db.panels[panel] || [])];
+  if (tests.includes("CBC")) tests.push("Hemoglobin", "RBC", "HCT", "Potassium", "Blood glucose");
+  return [...new Set(tests)];
 }
-
+function loadOrderPanel() {
+  const panel = document.getElementById("orderPanel").value;
+  document.getElementById("orderTests").value = normalizedPanelTests(panel).join(", ");
+}
+function createOrder() {
+  const patientId = document.getElementById("orderPatient").value;
+  const panel = document.getElementById("orderPanel").value;
+  const tests = document.getElementById("orderTests").value.split(",").map(x => x.trim()).filter(Boolean);
+  if (!patientId || !tests.length) return alert("Select patient and tests");
+  db.orders.unshift({
+    id: `O${Date.now().toString().slice(-8)}`,
+    patientId,
+    panel,
+    tests,
+    status: "Ordered",
+    date: nowDate(),
+  });
+  saveData();
+}
+function renderOrderList() {
+  const ul = document.getElementById("orderList");
+  ul.innerHTML = db.orders.map(o => `<li>${o.id} | ${o.patientId} | ${o.panel} | ${o.status}</li>`).join("") || "<li>No orders</li>";
+}
+function renderOrderSelect() {
+  document.getElementById("resultOrder").innerHTML = db.orders
+    .filter(o => o.status === "Ordered")
+    .map(o => `<option value="${o.id}">${o.id} | ${o.patientId} | ${o.panel}</option>`)
+    .join("");
+}
+function loadOrderForEntry() {
+  const orderId = document.getElementById("resultOrder").value;
+  const order = db.orders.find(o => o.id === orderId);
+  if (!order) return alert("Select pending order");
+  currentTests = [...order.tests];
+  renderResultRows(order.patientId);
+}
 function previousResultFor(patientId, test) {
   const rep = db.reports.find(r => r.patientId === patientId && r.results[test] !== undefined);
   return rep ? rep.results[test] : "-";
 }
-
-function renderResultRows() {
-  const pid = document.getElementById("resultPatient").value;
+function renderResultRows(selectedPatientId) {
+  const order = db.orders.find(o => o.id === document.getElementById("resultOrder").value);
+  const pid = selectedPatientId || order?.patientId || "";
   const body = document.getElementById("resultTableBody");
   body.innerHTML = "";
   currentTests.forEach((t, idx) => {
@@ -535,7 +543,6 @@ function renderResultRows() {
     };
   });
 }
-
 function checkAbnormal(input, meta, flagCell) {
   const val = +input.value;
   if (!feature.abnormalHighlight || Number.isNaN(val) || !meta.low) {
@@ -547,7 +554,6 @@ function checkAbnormal(input, meta, flagCell) {
   else if (val > meta.high) { input.classList.add("abnormal"); flagCell.textContent = "H"; flagCell.className = "flagCell flag"; }
   else { input.classList.remove("abnormal"); flagCell.textContent = ""; }
 }
-
 function focusNextResult(idx) {
   const all = [...document.querySelectorAll(".resultInput")];
   all[idx + 1]?.focus();
@@ -556,7 +562,6 @@ function autoMoveToNext(idx) {
   const all = [...document.querySelectorAll(".resultInput")];
   if (all[idx].value.length >= 1) all[idx + 1]?.focus();
 }
-
 function bindKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
     if (!feature.keyboardShortcuts) return;
@@ -564,13 +569,11 @@ function bindKeyboardShortcuts() {
     if (e.ctrlKey && e.key.toLowerCase() === "p") { e.preventDefault(); window.print(); }
   });
 }
-
 function collectResults() {
   const results = {};
   document.querySelectorAll(".resultInput").forEach(i => results[i.dataset.test] = i.value);
   return results;
 }
-
 function cbcAutocalc() {
   const v = collectResults();
   const hb = +v["Hemoglobin"], hct = +v["HCT"], rbc = +v["RBC"];
@@ -581,13 +584,11 @@ function cbcAutocalc() {
   const morph = morphology(v["MCV"], v["MCHC"]);
   document.getElementById("cbcInterpretation").textContent = `CBC Auto-calculated: MCV ${v["MCV"]}, MCH ${v["MCH"]}, MCHC ${v["MCHC"]} | ${morph}`;
 }
-
 function morphology(mcv, mchc) {
   if (mcv < 80 && mchc < 32) return "Microcytic hypochromic";
   if (mcv > 100) return "Macrocytic anemia";
   return "Normocytic normochromic";
 }
-
 function criticalAlerts() {
   const v = collectResults();
   const messages = [];
@@ -600,31 +601,32 @@ function criticalAlerts() {
     box.textContent = `Critical value alert: ${messages.join(", ")}`;
   } else box.classList.add("hidden");
 }
-
 function saveReport() {
-  const patientId = document.getElementById("resultPatient").value;
-  if (!patientId) return alert("Select patient");
+  const orderId = document.getElementById("resultOrder").value;
+  const order = db.orders.find(o => o.id === orderId);
+  const patientId = order?.patientId;
+  if (!patientId) return alert("Select pending order");
   const report = {
     id: `R${Date.now().toString().slice(-8)}`,
     patientId,
     date: nowDate(),
     results: collectResults(),
     comments: document.getElementById("resultComments").value,
-    paymentMethod: "Cash",
-    revenue: 500,
+    paymentMethod: "Pending",
+    revenue: order?.tests?.length ? order.tests.length * 120 : 500,
+    orderId,
   };
   db.reports.unshift(report);
+  if (order) order.status = "Result Entered";
   saveData();
   alert("Report saved");
 }
-
 function renderTimeline() {
   const pid = document.getElementById("historyPatient").value;
   const list = document.getElementById("timeline");
   const rows = db.reports.filter(r => r.patientId === pid).sort((a, b) => b.date.localeCompare(a.date));
   list.innerHTML = rows.map(r => `<li><strong>${r.date}</strong> - Report ${r.id}<br/><button onclick="reprintById('${r.id}')">Open report</button></li>`).join("") || "<li>No history</li>";
 }
-
 function reprintById(id) {
   const r = db.reports.find(x => x.id === id);
   if (!r) return;
@@ -634,7 +636,6 @@ function reprintById(id) {
   w.print();
 }
 window.reprintById = reprintById;
-
 function searchReprints() {
   const q = document.getElementById("reprintSearch").value.toLowerCase();
   const patientIds = db.patients.filter(p => `${p.id} ${p.name}`.toLowerCase().includes(q)).map(p => p.id);
@@ -645,7 +646,53 @@ function renderReprintList(rows) {
   const ul = document.getElementById("reprintList");
   ul.innerHTML = rows.map(r => `<li>${r.id} | ${r.patientId} | ${r.date} <button onclick="reprintById('${r.id}')">Reprint</button></li>`).join("") || "<li>No reports</li>";
 }
-
+function renderReportSelect() {
+  document.getElementById("reportSelect").innerHTML = db.reports.map(r => `<option value="${r.id}">${r.id} | ${r.patientId}</option>`).join("");
+}
+function generateReportPreview() {
+  const rid = document.getElementById("reportSelect").value;
+  const report = db.reports.find(r => r.id === rid);
+  if (!report) return;
+  const patient = db.patients.find(p => p.id === report.patientId);
+  const lines = [
+    `Report ID: ${report.id}`,
+    `Patient: ${patient?.name || report.patientId}`,
+    `Date: ${report.date}`,
+    `Technician workflow status: Finalized`,
+    ...Object.entries(report.results).map(([k,v]) => `${k}: ${v}`),
+    `Comments: ${report.comments || "-"}`,
+  ];
+  document.getElementById("generatedReport").textContent = lines.join("\n");
+}
+function searchPatients() {
+  const q = document.getElementById("patientSearchInput").value.toLowerCase();
+  const rows = db.patients.filter(p => `${p.id} ${p.name} ${p.phone}`.toLowerCase().includes(q));
+  document.getElementById("patientSearchResults").innerHTML = rows.map(p => `<li>${p.id} | ${p.name} | ${p.phone || "-"}</li>`).join("") || "<li>No patient found</li>";
+}
+function renderBillingReportSelect() {
+  document.getElementById("billingReport").innerHTML = db.reports.map(r => `<option value="${r.id}">${r.id} | ${r.patientId} | ${r.revenue}</option>`).join("");
+}
+function createBill() {
+  const reportId = document.getElementById("billingReport").value;
+  const method = document.getElementById("billingMethod").value;
+  const report = db.reports.find(r => r.id === reportId);
+  if (!report) return alert("Select report");
+  const bill = {
+    id: `B${Date.now().toString().slice(-8)}`,
+    reportId,
+    patientId: report.patientId,
+    amount: report.revenue || 0,
+    paymentMethod: method,
+    date: nowDate(),
+  };
+  db.bills.unshift(bill);
+  report.paymentMethod = method;
+  saveData();
+}
+function renderBillingList() {
+  const ul = document.getElementById("billingList");
+  ul.innerHTML = db.bills.map(b => `<li>${b.id} | ${b.reportId} | ${b.patientId} | ${b.amount} | ${b.paymentMethod}</li>`).join("") || "<li>No bills</li>";
+}
 function exportData(e) {
   if (role !== "Admin") return alert("Admin only");
   const format = e.target.dataset.format;
@@ -664,7 +711,6 @@ function exportData(e) {
   a.download = `${kind}.${ext}`;
   a.click();
 }
-
 function renderDashboard() {
   const today = nowDate();
   const todayReports = db.reports.filter(r => r.date === today);
@@ -678,7 +724,6 @@ function renderDashboard() {
   document.getElementById("dashboardCards").innerHTML = Object.entries(kpis).map(([k,v]) => `<div class='kpi'><div>${k}</div><div class='v'>${v}</div></div>`).join("");
   document.getElementById("recentPatients").innerHTML = db.patients.slice(0, 5).map(p => `<li>${p.id} | ${p.name} | ${p.date}</li>`).join("") || "<li>No patients</li>";
 }
-
 function drawTrend() {
   const pid = document.getElementById("trendPatient").value;
   const test = document.getElementById("trendTest").value;
@@ -701,7 +746,6 @@ function drawTrend() {
   ctx.fillStyle = "#222";
   ctx.fillText(`${test} trend`, 10, 12);
 }
-
 function renderToggles() {
   const panel = document.getElementById("togglePanel");
   panel.innerHTML = "";
@@ -721,7 +765,6 @@ function renderToggles() {
     if (feature.cloudBackup) alert("Supabase sync can be connected with project URL + anon key.");
   };
 }
-
 function applyFeatureToggles() {
   document.getElementById("commentsWrap").classList.toggle("hidden", !feature.commentsSection);
   document.getElementById("history").classList.toggle("hidden", !feature.historyTimeline && document.querySelector(".tabs button.active")?.dataset.view === "history");
@@ -729,9 +772,7 @@ function applyFeatureToggles() {
   document.getElementById("export").classList.toggle("hidden", !feature.dataExport && document.querySelector(".tabs button.active")?.dataset.view === "export");
   if (currentTests.length) renderResultRows();
 }
-
 ["historyPatient"].forEach(id => document.addEventListener("change", (e) => {
   if (e.target.id === id) renderTimeline();
 }));
-
 document.addEventListener("DOMContentLoaded", setup);

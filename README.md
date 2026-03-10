@@ -25,6 +25,7 @@ Open `http://localhost:4173`.
 
 - Role-based login (Admin / Technician / Doctor) with optional OTP input and session timeout.
 - Patient registration with auto-generated patient ID.
+- Test ordering by patient and panel with pending order queue.
 - Doctor/hospital database selection.
 - Test panel loading and department-like test structure.
 - Technician result entry with abnormal highlighting, H/L flags, keyboard shortcuts, Enter navigation, auto-next focus.
@@ -33,9 +34,12 @@ Open `http://localhost:4173`.
 - Critical value alerts.
 - Comments/notes area.
 - Patient timeline history and report reprint in read-only mode.
+- Dedicated report generation view for finalized reports.
 - Trend graph visualization for key tests.
+- Patient search by name, ID, and phone number.
 - Admin export actions (CSV/Excel/PDF).
 - Smart dashboard cards.
+- Billing module with bill generation and payment method tracking (Cash/UPI/Card).
 - Feature toggle settings and optional Supabase sync toggle.
 
 Data is persisted in browser localStorage for offline-first behavior.
